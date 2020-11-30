@@ -15,6 +15,10 @@ module.exports = {
       }
     ]
   },
+  watchOptions: {
+    aggregateTimeout: 200,
+    ignored: ['node_modules/**', 'compiler.js']
+  },
   resolve: {
     extensions: ['.ts']
   }

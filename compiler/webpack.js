@@ -32,6 +32,7 @@ function onInit() {
   }
 
   webpack.mode = argv.dev ? 'development' : 'production';
+  webpack.watch = argv.dev ? true : false;
   webpack.externals = [node_modules()];
   webpack.node = {
     global: false,
