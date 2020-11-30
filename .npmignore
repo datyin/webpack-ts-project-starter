@@ -1,0 +1,13 @@
+.vscode/
+node_modules/
+src/
+dist/
+compiler/
+compiler.js
+tsconfig.json
+webpack.config.js
+.eslintignore
+.eslintrc.*
+.prettierrc*
+prettier.config.*
+_config.yml
