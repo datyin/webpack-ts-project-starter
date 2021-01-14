@@ -1,67 +1,60 @@
-const chalk = require('chalk');
+const cp = require('chalk');
+const fg = require('fast-glob');
 const yargs = require('yargs/yargs');
-const node_modules = require('webpack-node-externals');
-const { sync } = require('fast-glob');
 const { resolve, basename } = require('path');
-const { forEach } = require('lodash');
-const { getEntry } = require('./helper');
+const { isPlainObject, get, set, defaultsDeep } = require('lodash');
+
+let webpack_config = require('../webpack.config');
 
 const { argv } = yargs(process.argv);
-const rootDir = resolve(__dirname, '..').replace(/\\/g, '/');
+const distDir = resolve(__dirname, '..', 'dist').replace(/\\/g, '/');
+const srcDir = resolve(__dirname, '..', 'src').replace(/\\/g, '/');
 
-const webpack = require(`${rootDir}/webpack.config.js`);
-const configs = {};
+function generate() {
+  if (!isPlainObject(webpack_config)) {
+    console.log(cp`{redBright Failed} to load webpack.config!`);
+    process.exit(1);
+  }
 
-function loadConfigs() {
-  sync(`${rootDir}/src/*.webpack.js`).forEach((entry) => {
-    try {
-      const name = basename(entry, '.webpack.js');
-      configs[name] = require(entry);
-    } catch (error) {
-      console.log(chalk`{redBright Failed} to load '{greenBright ${entry}}'`);
+  // Target must be node
+  const target = get(webpack_config, 'target', 'node').toLowerCase();
+
+  if (typeof target === 'string' && !target.startsWith('node')) {
+    set(webpack_config, 'target', 'node');
+  }
+
+  const entry = get(argv, 'entry', '').toLowerCase();
+  let fromMultipleEntries = false;
+
+  fg.sync(`${srcDir}/*.webpack.js`).forEach((config) => {
+    const name = basename(config, '.webpack.js').toLowerCase();
+
+    if (entry) {
+      if (entry === name) {
+        const customConfig = require(config);
+        webpack_config = defaultsDeep(customConfig, webpack_config);
+      }
+    } else {
+      // if no entry is provided load all configs
+      const customConfig = require(config);
+      webpack_config = defaultsDeep(customConfig, webpack_config);
+
+      fromMultipleEntries = true;
     }
   });
-}
 
-function onInit() {
-  loadConfigs();
+  // Watch mode is determinated by argv
+  set(webpack_config, 'mode', argv.dev ? 'development' : 'production');
+  set(webpack_config, 'watch', argv.dev ? true : false);
+  set(webpack_config, 'output.filename', '[name].js');
+  set(webpack_config, 'output.libraryTarget', 'commonjs2');
 
-  if (!webpack.target || !webpack.target.startsWith('node')) {
-    const nodeVersion = process.version.match(/^v(\d+\.\d+)/)[1];
-    webpack.target = `node${nodeVersion}`;
+  // Output
+  if (fromMultipleEntries) {
+    set(webpack_config, 'output.path', distDir);
   }
 
-  webpack.mode = argv.dev ? 'development' : 'production';
-  webpack.watch = argv.dev ? true : false;
-  webpack.externals = [node_modules()];
-  webpack.node = {
-    global: false,
-    __filename: false,
-    __dirname: false
-  };
-
-  if (argv.dev) {
-    const entry = getEntry(configs);
-
-    if (entry && configs[entry] && configs[entry].entry) {
-      webpack.entry = configs[entry].entry;
-    }
-  } else {
-    const entries = {};
-
-    forEach(configs, (config) => {
-      if (config.entry) {
-        forEach(config.entry, (entryPath, entry) => {
-          entries[entry] = entryPath;
-        });
-      }
-    });
-
-    webpack.entry = entries;
-  }
-
-  console.log(chalk`Compiler target: {greenBright ${webpack.target}}`);
-  return webpack;
+  return webpack_config;
 }
 
-module.exports = onInit;
+module.exports = generate;

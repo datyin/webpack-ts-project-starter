@@ -1,45 +1,53 @@
 const chalk = require('chalk');
 const yargs = require('yargs/yargs');
-const { clone } = require('lodash');
+const { clone, isArray, forEach, get, isPlainObject } = require('lodash');
 const { writeJsonSync } = require('fs-extra');
 
 const { argv } = yargs(process.argv);
 
 function onInit(stats) {
-  if (argv.dev) {
+  if (argv.dev || !isPlainObject(stats)) {
     return;
   }
 
   const package = require(`../package.json`);
-  const cleanPackage = clone(package);
+  const newPackage = clone(package);
 
-  if (cleanPackage.devDependencies) {
-    delete cleanPackage.devDependencies;
+  if (newPackage.devDependencies) {
+    delete newPackage.devDependencies;
   }
 
-  if (cleanPackage.scripts) {
-    delete cleanPackage.scripts;
+  if (newPackage.scripts) {
+    delete newPackage.scripts;
   }
 
-  cleanPackage.dependencies = {};
+  newPackage.dependencies = {};
 
-  if (stats && Array.isArray(stats.modules)) {
-    const externals = stats.modules
-      .filter((m) => m.identifier && m.identifier.startsWith('external '))
-      .map((m) => m.name.replace('external ', '').replace(/"/g, ''));
+  if (isArray(stats.modules)) {
+    forEach(stats.modules, (mod) => {
+      const identifier = get(mod, 'identifier', '');
 
-    externals.forEach((p) => {
-      if (package.dependencies && package.dependencies[p]) {
-        cleanPackage.dependencies[p] = package.dependencies[p];
-      } else if (package.devDependencies && package.devDependencies[p]) {
-        cleanPackage.dependencies[p] = package.devDependencies[p];
+      if (!identifier.startsWith('external ')) {
+        return;
+      }
+
+      const name = identifier.match(/(?<=^external ")(.*?)(?=")/g);
+
+      if (!name || !name[0]) {
+        return;
+      }
+
+      if (package.dependencies && package.dependencies[name]) {
+        newPackage.dependencies[name] = package.dependencies[name];
+      } else if (package.devDependencies && package.devDependencies[name]) {
+        newPackage.dependencies[name] = package.devDependencies[name];
       }
     });
   }
 
-  if (stats && stats.outputPath) {
+  if (stats.outputPath) {
     try {
-      writeJsonSync(`${stats.outputPath}/package.json`, cleanPackage, {
+      writeJsonSync(`${stats.outputPath}/package.json`, newPackage, {
         spaces: 2,
         encoding: 'utf8'
       });

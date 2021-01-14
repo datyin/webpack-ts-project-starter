@@ -9,15 +9,9 @@ webpack(webpack_config(), (err, stats) => {
     return;
   }
 
+  console.log(stats.toString({ chunks: false, colors: true }));
+
   const statsInfo = stats.toJson();
-
-  console.log(
-    stats.toString({
-      chunks: false,
-      colors: true
-    })
-  );
-
-  package_config();
+  package_config(statsInfo);
   execute(statsInfo);
 });

@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "node ./compiler.js --dev --entry=simple",
+    "dev": "node ./compiler.js --dev",
+    "dev:simple": "node ./compiler.js --dev --entry=simple",
     "dev:server": "node ./compiler.js --dev --entry=server",
     "dev:worker_thread": "node ./compiler.js --dev --entry=worker_thread",
-    "build": "node ./compiler.js"
+    "build": "node ./compiler.js",
+    "build:simple": "node ./compiler.js --entry=simple",
+    "build:server": "node ./compiler.js --entry=server",
+    "build:worker_thread": "node ./compiler.js --entry=worker_thread"
   },
   "author": {
     "name": "Jove Jonovski",
@@ -18,8 +22,8 @@
     "@types/lodash": "^4.14.167",
     "@types/node": "^14.14.20",
     "@types/yargs": "^15.0.12",
-    "@typescript-eslint/eslint-plugin": "^4.12.0",
-    "@typescript-eslint/parser": "^4.12.0",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.13.0",
     "chalk": "^4.1.0",
     "eslint": "^7.17.0",
     "eslint-config-prettier": "^7.1.0",
@@ -27,13 +31,13 @@
     "fast-glob": "^3.2.4",
     "fastify": "^3.9.2",
     "fastify-compress": "^3.4.1",
-    "fastify-static": "^3.3.1",
+    "fastify-static": "^3.4.0",
     "fs-extra": "^9.0.1",
     "lodash": "^4.17.20",
     "prettier": "^2.2.1",
     "ts-loader": "^8.0.14",
     "typescript": "^4.1.3",
-    "webpack": "^5.12.2",
+    "webpack": "^5.14.0",
     "webpack-node-externals": "^2.5.2",
     "yargs": "^16.2.0"
   },

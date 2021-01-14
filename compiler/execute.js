@@ -2,9 +2,8 @@ const chalk = require('chalk');
 const yargs = require('yargs/yargs');
 const { spawn } = require('child_process');
 const { pathExistsSync } = require('fs-extra');
-const { forEach } = require('lodash');
+const { forEach, isPlainObject, get } = require('lodash');
 const { resolve, normalize } = require('path');
-const { getEntry } = require('./helper');
 
 const prefix = chalk`[{magenta Execute}]`;
 const errorPrefix = chalk`[{red ERROR}]`;
@@ -13,24 +12,36 @@ const { argv } = yargs(process.argv);
 let child = null;
 
 function onInit(stats) {
-  if (!stats || !stats.outputPath) {
-    console.log('Failed to get stats.outputPath');
-    return;
-  }
-  const entry = getEntry();
-
-  let path = '';
-
-  if (entry && pathExistsSync(`${stats.outputPath}/${entry}.js`)) {
-    path = `${stats.outputPath}/${entry}.js`;
-  }
-
-  if (!path) {
-    console.log(prefix, errorPrefix, 'Failed to find entry point to be executed!');
+  if (!argv.dev) {
     return;
   }
 
-  path = normalize(path);
+  // Entry Point
+  const entry = get(argv, 'entry', '').trim().toLowerCase();
+
+  if (!entry) {
+    return;
+  }
+
+  if (!isPlainObject(stats)) {
+    console.log(prefix, errorPrefix, 'Input is not object!');
+    return;
+  }
+
+  // Output Direcotry
+  const outputDir = get(stats, 'outputPath', '');
+
+  if (!outputDir) {
+    console.log(prefix, errorPrefix, 'Failed to find outputPath!');
+    return;
+  }
+
+  const path = normalize(`${outputDir}/${entry}.js`);
+
+  if (!pathExistsSync(path)) {
+    console.log(prefix, errorPrefix, `Failed to find entry point! '${path}'`);
+    return;
+  }
 
   if (child) {
     console.log(prefix, chalk`Restarting script {greenBright.bold ${path}}`);
