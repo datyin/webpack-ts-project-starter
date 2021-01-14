@@ -43,6 +43,18 @@ function generate() {
     }
   });
 
+  if (!webpack_config.entry) {
+    if (entry) {
+      webpack_config.entry = {
+        [`${entry}`]: `./src/${entry}.ts`
+      };
+    } else {
+      webpack_config.entry = {
+        ['main']: `./src/main.ts`
+      };
+    }
+  }
+
   // Watch mode is determinated by argv
   set(webpack_config, 'mode', argv.dev ? 'development' : 'production');
   set(webpack_config, 'watch', argv.dev ? true : false);
