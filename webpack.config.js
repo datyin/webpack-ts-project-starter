@@ -1,10 +1,12 @@
-const path = require('path');
+const { resolve } = require('path');
 const node_modules = require('webpack-node-externals');
+
+const outputDir = resolve(__dirname, 'dist');
 
 module.exports = {
   target: 'node12.19',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: outputDir,
     filename: '[name].js',
     libraryTarget: 'commonjs2'
   },

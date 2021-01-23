@@ -61,7 +61,10 @@ function onInit(stats) {
 
   child = spawn(argv._[0], arguments, {
     cwd: resolve(__dirname, '..'),
-    encoding: 'utf8'
+    encoding: 'utf8',
+    env: {
+      FORCE_COLOR: true
+    }
   });
 
   child.stderr.on('data', (data) =>
